@@ -11,22 +11,93 @@ permissions:
   attestations: write
 
 jobs:
-  release-token:
-    uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
-    with:
-      release_name: ${{ github.ref_name }}
-      release_description: 'OutcomeToken (SEP-41 outcome share) build for ${{ github.ref_name }}'
-      relative_path: 'contracts/token'
-      package: 'outcome-token'
-    secrets:
-      release_token: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - relative_path: contracts/token
+            package: outcome-token
+            description: 'OutcomeToken (SEP-41 outcome share / tEURC collateral)'
+          - relative_path: contracts/market
+            package: market
+            description: 'Market (binary outcome-market settlement)'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  release-market:
-    uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
-    with:
-      release_name: ${{ github.ref_name }}
-      release_description: 'Market (outcome-market settlement) build for ${{ github.ref_name }}'
-      relative_path: 'contracts/market'
-      package: 'market'
-    secrets:
-      release_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Rust and add wasm32 target
+        run: |
+          rustup update
+          rustup target add wasm32v1-none
+
+      - name: Install stellar-cli
+        uses: stellar/stellar-cli@v26.1.0
+        with:
+          version: '26.1.0'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Print versions
+        run: |
+          rustc --version
+          cargo --version
+          stellar --version
+
+      - name: Build and hash contract
+        id: build
+        working-directory: ${{ matrix.relative_path }}
+        run: |
+          OUTPUT="$RUNNER_TEMP/out-${{ matrix.package }}"
+          mkdir -p "$OUTPUT"
+          stellar contract build --optimize \
+            --package ${{ matrix.package }} \
+            --out-dir "$OUTPUT" \
+            --meta source_repo=github:${{ github.repository }}
+          PACKAGE_VERSION=$(cargo metadata --format-version=1 --no-deps \
+            | jq -r '.packages[] | select(.name == "${{ matrix.package }}") | .version')
+          if [ -z "$PACKAGE_VERSION" ]; then
+            echo "ERROR: Failed to get the package version"; exit 1
+          fi
+          CLI_VERSION=$(stellar --version | grep -oP 'stellar \K\S+')
+          WASM_FILE_NAME="${{ matrix.package }}_v${PACKAGE_VERSION}.wasm"
+          find "$OUTPUT" -name "*.wasm" -exec cp {} "$OUTPUT/$WASM_FILE_NAME" \;
+          WASM_HASH=$(sha256sum "$OUTPUT/$WASM_FILE_NAME" | cut -d ' ' -f 1)
+          TAG_NAME="${{ github.ref_name }}_${{ matrix.package }}_cli${CLI_VERSION}"
+          echo "OUTPUT=$OUTPUT" >> "$GITHUB_ENV"
+          echo "WASM_FILE_NAME=$WASM_FILE_NAME" >> "$GITHUB_ENV"
+          echo "WASM_HASH=$WASM_HASH" >> "$GITHUB_ENV"
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_ENV"
+          echo "Built ${{ matrix.package }} v$PACKAGE_VERSION -> hash $WASM_HASH"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$TAG_NAME" "$OUTPUT/$WASM_FILE_NAME" \
+            --title "$TAG_NAME" \
+            --notes "${{ matrix.description }} — sha256: \`$WASM_HASH\`"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: '${{ env.OUTPUT }}/${{ env.WASM_FILE_NAME }}'
+          subject-name: '${{ env.WASM_FILE_NAME }}'
+
+      - name: Send release info to stellar.expert
+        run: |
+          JSON_OBJECT=$(jq -n \
+            --arg repository "${{ github.server_url }}/${{ github.repository }}" \
+            --arg commitHash "${{ github.sha }}" \
+            --arg jobId "${{ github.job }}" \
+            --arg runId "${{ github.run_id }}" \
+            --arg contractHash "$WASM_HASH" \
+            --arg relativePath "${{ matrix.relative_path }}" \
+            --arg packageName "${{ matrix.package }}" \
+            '{repository:$repository, commitHash:$commitHash, jobId:$jobId, runId:$runId, contractHash:$contractHash, relativePath:$relativePath, packageName:$packageName}')
+          echo "JSON to send: $JSON_OBJECT"
+          curl -X POST "https://api.stellar.expert/explorer/public/contract-validation/match" \
+            -H "Content-Type: application/json" \
+            -d "$JSON_OBJECT" --max-time 15 || true
