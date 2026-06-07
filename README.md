@@ -103,36 +103,63 @@ prints the contract IDs plus stellar.expert links.
 ### Deployed contract IDs (testnet)
 
 Live deployment exercising a full `mint -> merge` and
-`mint -> set_outcome(Yes) -> redeem` round-trip:
+`mint -> set_outcome(Yes) -> redeem` round-trip. These instances were deployed
+from the **`v0.1.0` GitHub release artifacts** (see [Source verification](#source-verification)),
+so their on-chain Wasm hashes match the attested build:
 
 | Contract | ID | Explorer |
 |----------|----|----------|
-| tEURC | `CB5ZSBJCF26FLXQY4PAD4J63GX35MXI5SLEPJH33AP42FXMJLDWM3HFN` | https://stellar.expert/explorer/testnet/contract/CB5ZSBJCF26FLXQY4PAD4J63GX35MXI5SLEPJH33AP42FXMJLDWM3HFN |
-| YES | `CAIGUZMH5XPGW44LVCTYNF35AXRWC2RUEUZ4BS5VUE4YQ6VOUTAJHLLW` | https://stellar.expert/explorer/testnet/contract/CAIGUZMH5XPGW44LVCTYNF35AXRWC2RUEUZ4BS5VUE4YQ6VOUTAJHLLW |
-| NO | `CCFYUG47AWEH3674TP2LMULEE5Y657VANX2PDIO2OZLJBHQOLGX3XR66` | https://stellar.expert/explorer/testnet/contract/CCFYUG47AWEH3674TP2LMULEE5Y657VANX2PDIO2OZLJBHQOLGX3XR66 |
-| Market | `CATXXTZBQCCRZNIZTRCA5NG7FQUJ4KHKMZ3VXBTSOVHG25P4QHWIUCZS` | https://stellar.expert/explorer/testnet/contract/CATXXTZBQCCRZNIZTRCA5NG7FQUJ4KHKMZ3VXBTSOVHG25P4QHWIUCZS |
+| tEURC | `CDLN5SFRB7GQOA7OHRPL7PATZGB3LEHL73HIL2EUZJTHMYJHCPJU25UQ` | https://stellar.expert/explorer/testnet/contract/CDLN5SFRB7GQOA7OHRPL7PATZGB3LEHL73HIL2EUZJTHMYJHCPJU25UQ |
+| YES | `CDKNWOKJM2G7MEASMDZFONIM5F3BXYT6ZGD5CVHBMG6T2H5QSBIT625P` | https://stellar.expert/explorer/testnet/contract/CDKNWOKJM2G7MEASMDZFONIM5F3BXYT6ZGD5CVHBMG6T2H5QSBIT625P |
+| NO | `CCGVSAYCZNC2HXIV3TUA6YVXZSOAGAALVMOFRONCNJPEI63ZBZHHIJT2` | https://stellar.expert/explorer/testnet/contract/CCGVSAYCZNC2HXIV3TUA6YVXZSOAGAALVMOFRONCNJPEI63ZBZHHIJT2 |
+| Market | `CCMGIGNUNAWD7XNK27XRSLUNPYQ2YJKZTUG7IADXKSADWNKU55RA3LG4` | https://stellar.expert/explorer/testnet/contract/CCMGIGNUNAWD7XNK27XRSLUNPYQ2YJKZTUG7IADXKSADWNKU55RA3LG4 |
 
-> Re-running `deploy.sh` produces fresh contract IDs; update the table above
-> accordingly.
+On-chain Wasm hashes (sha256), matching the `v0.1.0` release artifacts:
+
+- `outcome-token`: `e6aee2d983df84c1562df50c514498feae33fca8ad560ef18a34422804853e24`
+- `market`: `34ca30ec1c1fd712b4f3613ae98f749f481f124219ea0af85c5de443c2c4309e`
+
+> Re-running `deploy.sh` builds locally and produces fresh contract IDs whose
+> hashes will differ from the release artifacts; for verifiable deployments,
+> deploy the `.wasm` attached to the GitHub release instead.
 
 ## Source verification
 
-This repo ships `.github/workflows/release.yml`, which builds both contracts
-with the [`stellar-expert/soroban-build-workflow`](https://github.com/stellar-expert/soroban-build-workflow).
-Pushing a `v*` git tag triggers a reproducible build that publishes the compiled
-`.wasm` plus a build attestation as a GitHub release, and registers the build
-with stellar.expert's [contract validation](https://stellar.expert/explorer/public/contract/validation)
-service.
+This repo ships `.github/workflows/release.yml`. Pushing a `v*` git tag builds
+both contracts with `stellar contract build --optimize` (pinned `stellar-cli`
+26.1.0), then for each contract it:
 
-For a deployed contract to show as **verified** on stellar.expert, the on-chain
-Wasm hash must match a release artifact produced by this workflow. The contract
-IDs listed above were deployed from a local `deploy.sh` build, so to get a
-formally validated deployment you should:
+1. publishes the optimized `.wasm` as a GitHub release asset,
+2. produces a signed [build-provenance attestation](https://github.com/sadegh16/fenet-soroban-settlement-poc/attestations)
+   (`actions/attest-build-provenance`), and
+3. POSTs the build metadata to stellar.expert's
+   [contract-validation](https://stellar.expert/explorer/public/contract/validation)
+   match API.
 
-1. Push a tag (`git tag v0.1.0 && git push origin v0.1.0`) and let the Action
-   produce the release artifacts.
-2. Deploy the exact `.wasm` from the release (or compare its SHA-256 against your
-   local build with `stellar contract info` before deploying).
+> The workflow is a self-contained adaptation of
+> [`stellar-expert/soroban-build-workflow`](https://github.com/stellar-expert/soroban-build-workflow).
+> The upstream reusable workflow pins `stellar-cli` 25.1.0, which cannot build
+> the OpenZeppelin-based token (it enables the soroban-sdk
+> `experimental_spec_shaking_v2` feature, which requires `stellar-cli` >= 25.2.0).
+
+The `v0.1.0` release artifacts and their sha256 hashes:
+
+| Package | Release asset | sha256 |
+|---------|---------------|--------|
+| `outcome-token` | [`outcome-token_v0.1.0.wasm`](https://github.com/sadegh16/fenet-soroban-settlement-poc/releases/tag/v0.1.0_outcome-token_cli26.1.0) | `e6aee2d983df84c1562df50c514498feae33fca8ad560ef18a34422804853e24` |
+| `market` | [`market_v0.1.0.wasm`](https://github.com/sadegh16/fenet-soroban-settlement-poc/releases/tag/v0.1.0_market_cli26.1.0) | `34ca30ec1c1fd712b4f3613ae98f749f481f124219ea0af85c5de443c2c4309e` |
+
+The live contracts in the table above were **deployed from these exact release
+artifacts**, so their on-chain Wasm hashes match the attestation. You can verify
+independently:
+
+```bash
+# hash of the on-chain code, compared against the release asset
+stellar contract info interface --network testnet \
+  --id CCMGIGNUNAWD7XNK27XRSLUNPYQ2YJKZTUG7IADXKSADWNKU55RA3LG4
+gh release download v0.1.0_market_cli26.1.0 --repo sadegh16/fenet-soroban-settlement-poc
+shasum -a 256 market_v0.1.0.wasm   # -> 34ca30ec...309e
+```
 
 ## How this maps to FENET
 
