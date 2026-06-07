@@ -16,7 +16,7 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'OutcomeToken (SEP-41 outcome share) build for ${{ github.ref_name }}'
-      relative_path: '["contracts/token"]'
+      relative_path: 'contracts/token'
       package: 'outcome-token'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'Market (outcome-market settlement) build for ${{ github.ref_name }}'
-      relative_path: '["contracts/market"]'
+      relative_path: 'contracts/market'
       package: 'market'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
