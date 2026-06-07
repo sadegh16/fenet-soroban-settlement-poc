@@ -161,36 +161,7 @@ gh release download v0.1.0_market_cli26.1.0 --repo sadegh16/fenet-soroban-settle
 shasum -a 256 market_v0.1.0.wasm   # -> 34ca30ec...309e
 ```
 
-## How this maps to FENET
 
-FENET is a Kalshi-style prediction-market platform (Go microservices + Elixir +
-Vue + Postgres). Today, matched positions and collateral are tracked off-chain
-in the order/ledger services. This PoC moves the **settlement and custody**
-substep on-chain:
-
-- A FENET market with a binary outcome maps to one `Market` instance plus its
-  `YES`/`NO` token pair.
-- A user buying a matched, fully-collateralised position corresponds to
-  `mint` (acquire a complete set) followed by trading one leg; closing out maps
-  to `merge`.
-- Market resolution in FENET's backend maps to `set_outcome`; user payouts map
-  to `redeem`.
-- The on-chain invariant gives a cryptographic solvency guarantee that the
-  platform can never owe more than it custodies — the property regulators and
-  users care about most.
-
-The off-chain matching engine, pricing, and UX stay where they are; only the
-trust-critical money movement is anchored on Stellar.
-
-## SCF alignment (Tranche 1)
-
-This repository is scoped as the **first concrete deliverable** of an SCF
-build: a working, tested, open-source settlement contract on testnet with a
-reproducible deploy. It establishes the on-chain foundation (SEP-41 outcome
-tokens + collateral custody + 1:1 redemption) that later tranches extend with
-oracle-driven resolution, an AMM/order interface, and an EURC-backed mainnet
-path. It is intentionally framed as *settlement infrastructure, not
-speculation*.
 
 ## Versions (pinned)
 
