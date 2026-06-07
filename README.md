@@ -102,14 +102,18 @@ prints the contract IDs plus stellar.expert links.
 
 ### Deployed contract IDs (testnet)
 
-Record the IDs printed by `deploy.sh` here after running it:
+Live deployment exercising a full `mint -> merge` and
+`mint -> set_outcome(Yes) -> redeem` round-trip:
 
 | Contract | ID | Explorer |
 |----------|----|----------|
-| tEURC | `TBD` | https://stellar.expert/explorer/testnet/contract/TBD |
-| YES | `TBD` | https://stellar.expert/explorer/testnet/contract/TBD |
-| NO | `TBD` | https://stellar.expert/explorer/testnet/contract/TBD |
-| Market | `TBD` | https://stellar.expert/explorer/testnet/contract/TBD |
+| tEURC | `CB5ZSBJCF26FLXQY4PAD4J63GX35MXI5SLEPJH33AP42FXMJLDWM3HFN` | https://stellar.expert/explorer/testnet/contract/CB5ZSBJCF26FLXQY4PAD4J63GX35MXI5SLEPJH33AP42FXMJLDWM3HFN |
+| YES | `CAIGUZMH5XPGW44LVCTYNF35AXRWC2RUEUZ4BS5VUE4YQ6VOUTAJHLLW` | https://stellar.expert/explorer/testnet/contract/CAIGUZMH5XPGW44LVCTYNF35AXRWC2RUEUZ4BS5VUE4YQ6VOUTAJHLLW |
+| NO | `CCFYUG47AWEH3674TP2LMULEE5Y657VANX2PDIO2OZLJBHQOLGX3XR66` | https://stellar.expert/explorer/testnet/contract/CCFYUG47AWEH3674TP2LMULEE5Y657VANX2PDIO2OZLJBHQOLGX3XR66 |
+| Market | `CATXXTZBQCCRZNIZTRCA5NG7FQUJ4KHKMZ3VXBTSOVHG25P4QHWIUCZS` | https://stellar.expert/explorer/testnet/contract/CATXXTZBQCCRZNIZTRCA5NG7FQUJ4KHKMZ3VXBTSOVHG25P4QHWIUCZS |
+
+> Re-running `deploy.sh` produces fresh contract IDs; update the table above
+> accordingly.
 
 ## How this maps to FENET
 

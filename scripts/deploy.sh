@@ -17,6 +17,13 @@
 
 set -euo pipefail
 
+# Ensure rust/cargo (installed via rustup) is on PATH even from a bare shell.
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "error: cargo not found on PATH. Install Rust (https://rustup.rs) or run: source \$HOME/.cargo/env" >&2
+  exit 1
+fi
+
 NETWORK="${NETWORK:-testnet}"
 RPC_URL="${RPC_URL:-https://soroban-testnet.stellar.org}"
 PASSPHRASE="Test SDF Network ; September 2015"
