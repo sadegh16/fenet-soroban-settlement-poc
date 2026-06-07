@@ -1,0 +1,23 @@
+[package]
+name = "outcome-token"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "SEP-41 fungible token (OpenZeppelin) used for tEURC collateral and YES/NO outcome shares in the FENET settlement PoC."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+stellar-tokens = { workspace = true }
+stellar-access = { workspace = true }
+stellar-macros = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+

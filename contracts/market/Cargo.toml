@@ -1,0 +1,20 @@
+[package]
+name = "market"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Binary YES/NO outcome market settlement contract for the FENET PoC on Soroban."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+outcome-token = { path = "../token", features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]

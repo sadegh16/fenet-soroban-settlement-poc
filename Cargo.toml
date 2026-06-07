@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = ["contracts/token", "contracts/market"]
+
+[workspace.dependencies]
+# Pinned: OpenZeppelin Stellar contracts 0.7.1 require soroban-sdk ^25.3.0.
+soroban-sdk = "=25.3.1"
+stellar-tokens = "=0.7.1"
+stellar-access = "=0.7.1"
+stellar-macros = "=0.7.1"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
