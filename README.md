@@ -115,6 +115,25 @@ Live deployment exercising a full `mint -> merge` and
 > Re-running `deploy.sh` produces fresh contract IDs; update the table above
 > accordingly.
 
+## Source verification
+
+This repo ships `.github/workflows/release.yml`, which builds both contracts
+with the [`stellar-expert/soroban-build-workflow`](https://github.com/stellar-expert/soroban-build-workflow).
+Pushing a `v*` git tag triggers a reproducible build that publishes the compiled
+`.wasm` plus a build attestation as a GitHub release, and registers the build
+with stellar.expert's [contract validation](https://stellar.expert/explorer/public/contract/validation)
+service.
+
+For a deployed contract to show as **verified** on stellar.expert, the on-chain
+Wasm hash must match a release artifact produced by this workflow. The contract
+IDs listed above were deployed from a local `deploy.sh` build, so to get a
+formally validated deployment you should:
+
+1. Push a tag (`git tag v0.1.0 && git push origin v0.1.0`) and let the Action
+   produce the release artifacts.
+2. Deploy the exact `.wasm` from the release (or compare its SHA-256 against your
+   local build with `stellar contract info` before deploying).
+
 ## How this maps to FENET
 
 FENET is a Kalshi-style prediction-market platform (Go microservices + Elixir +
